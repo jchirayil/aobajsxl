@@ -1,40 +1,12 @@
-// src/base/excel-schema-handler.ts
+// src/base/excel-data-handler.ts
+import { ExcelCore } from './excel-core';
 import JSZip from 'jszip';
 
-interface Schema {
-    [key: string]: string | null;
-}
+export class ExcelDataHandler extends ExcelCore {
 
-interface SharedStrings {
-    [key: number]: string;
-}
-
-interface SharedStringsRev {
-    [key: string]: number;
-}
-
-interface Sheets {
-    [key: string]: {
-        name: string;
-        id: number;
-        data: any;
-    };
-}
-
-export class ExcelDataHandler {
-    protected schema: Schema = {
-        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><workbookPr/><sheets>{placeholder}</sheets><definedNames/><calcPr/></workbook>`,
-        'xl/_rels/workbook.xml.rels': `<?xml version="1.0" ?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{placeholder}</Relationships>`,
-        '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>{placeholder}</Relationships>`,
-        '[Content_Types].xml': `<?xml version="1.0" ?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default ContentType="application/xml" Extension="xml"/><Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>{placeholder}</Types>`,
-        'xl/sharedStrings.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>{placeholder}`
-    };
-    protected shared: SharedStrings = {};
-    protected sharedRev: SharedStringsRev = {};
-    protected sheets: Sheets = {};
-    protected cols: string[] = [];
-
-    constructor() { }
+    constructor() {
+        super();
+     }
 
     async parseData(zip: JSZip): Promise<void> {
         let _rg0: RegExp | null = null;
@@ -227,7 +199,7 @@ export class ExcelDataHandler {
                         const match = key.match(/(?:.*\/)?([^\/]+?)(?=(?:\.[^\/.]*)?$)/);
                         if (match) {
                             const sheetName = match[1];
-                            _ret = _ret.replace('{placeholder}', this.__ws(this.sheets[sheetName].data));
+                            _ret = _ret.replace('{placeholder}', this.ws(this.sheets[sheetName].data));
                         }
                     } else {
                         console.log('Error: schema has {placeholder} tag.');
@@ -236,30 +208,5 @@ export class ExcelDataHandler {
             }
         }
         return _ret || '';
-    }
-
-    protected addSharedString(text: string, index: number = -1): number {
-        if (index < 0) {
-            index = Object.keys(this.shared).length;
-        }
-        if (this.shared.hasOwnProperty(index)) {
-            index++;
-            return this.addSharedString(text, index);
-        } else {
-            this.shared[index] = text;
-            this.sharedRev[text] = index;
-            return index;
-        }
-    }
-
-    protected lc(row: string, col: string): [number, number] {
-        const _b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const _r: [number, number] = [Number.parseInt(row) - 1, 0];
-        col = col.toUpperCase();
-        for (let i = 0, j = col.length - 1; i < col.length; i++, j--) {
-            _r[1] += Math.pow(_b.length, j) * (_b.indexOf(col[i]) + 1);
-        }
-        _r[1]--;
-        return _r;
     }
 }

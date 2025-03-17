@@ -1,15 +1,13 @@
 // src/base/excel-base.ts
 import { ExcelZipHandler } from './excel-zip-handler';
 import { ExcelDataHandler } from './excel-data-handler';
-import { ExcelSheetHandler } from './excel-sheet-handler';
 import JSZip from 'jszip';
 
-export class ExcelBase extends ExcelSheetHandler {
+export class ExcelBase {
   private zipHandler: ExcelZipHandler;
   private dataHandler: ExcelDataHandler;
 
   constructor() {
-    super();
     this.zipHandler = new ExcelZipHandler();
     this.dataHandler = new ExcelDataHandler();
   }
