@@ -175,7 +175,7 @@ export class ExcelCore {
         let _text = text.replace(/^\+/gm, `'+`);
         _text = _text.replace(/[ ]{2,}/gi, ' ');
         _text = _text.replace(/\x08/gi, '');
-        _text = escape(_text.replace(/\t/gi, ' '));
+        //_text = escape(_text.replace(/\t/gi, ' '));
         return _text;
     }
 

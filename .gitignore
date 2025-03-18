@@ -138,3 +138,7 @@ dist
 
 # VSCode
 .vscode/
+.vscode-test/
+
+# misc
+.DS_Store

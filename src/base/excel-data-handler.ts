@@ -6,7 +6,7 @@ export class ExcelDataHandler extends ExcelCore {
 
     constructor() {
         super();
-     }
+    }
 
     async parseData(zip: JSZip): Promise<void> {
         let _rg0: RegExp | null = null;
@@ -41,11 +41,11 @@ export class ExcelDataHandler extends ExcelCore {
                             _rg0 = /<sheets>([^]*)<\/sheets>/gim;
                             this.schema[file] = fileContent.replace(_rg0, '<sheets>{placeholder}</sheets>');
                             _rs0 = [...fileContent.matchAll(_rg0)];
-                            _rg0 = /\bname="([^"]*)"/gim;
+                            _rg0 = /\bname="([^"]*)"/;
                             for (const _r of _rs0) {
                                 _rs1 = _r[1]?.match(_rg0);
                                 if (_rs1) {
-                                    this.addSheet(_rs1[0], null);
+                                    this.addSheet(_rs1[1], null);
                                 }
                             }
                             break;
@@ -59,9 +59,9 @@ export class ExcelDataHandler extends ExcelCore {
                             break;
                         default:
                             if (file.includes('xl/worksheets/')) {
-                                const matches = file.match(/(?:.*\/)?([^/]+?)(?=\.[^/.]*$)/gim);
+                                const matches = file.match(/(?:.*\/)?([^/]+?)(?=\.[^/.]*$)/);
                                 if (matches) {
-                                    const _sn = matches[0];
+                                    const _sn = matches[1];
                                     let _d0: any[] = [];
                                     _rg0 = /<sheetData>([^]*)<\/sheetData>/gim;
                                     this.schema[file] = fileContent.replace(_rg0, '{placeholder}');
@@ -74,14 +74,18 @@ export class ExcelDataHandler extends ExcelCore {
                                         const _brs0 = _rs0[_r][0];
                                         _rs2 = [..._brs0.matchAll(_rg0)];
                                         for (let _c = 0; _c < _rs2.length; _c++) {
-                                            const cellMatch = _rs2[_c][0].match(/r="(\$?[a-z]{1,3})(\$?[0-9]{1,7})"/gim);
-                                            const _pos = cellMatch ? this.lc(cellMatch[0], cellMatch[1]) : [];
-                                            const typeMatch = _rs2[_c][0].match(/t="([^"])/gim);
-                                            const _t = typeMatch ? typeMatch[0] : null;
-                                            const valueMatch = _rs2[_c][0].match(/<v>([^<]*)<\/v>/gim);
-                                            let _v: string = valueMatch ? valueMatch[0] : '';
-                                            if (_t === 's') { _v = this.shared[_v] };
-                                            if (_r === 0) { this.cols.push(_v); } else { _row[this.cols[_pos[1]]] = _v; }
+                                            const cellMatch = _rs2[_c][0].match(/r="([A-Z]+)(\d+)"/);
+                                            const _pos = cellMatch ? this.lc(cellMatch[2], cellMatch[1]) : [];
+                                            const typeMatch = _rs2[_c][0].match(/t="([^"])/);
+                                            const _t = typeMatch ? typeMatch[1] : null;
+                                            const valueMatch = _rs2[_c][0].match(/<v>([^<]*)<\/v>/);
+                                            let _v: string = valueMatch ? valueMatch[1] : '';
+                                            if (_t === 's' && /^\d+$/.test(_v)) {
+                                                _v = this.shared[parseInt(_v, 10)];
+                                            }
+                                            if (_r === 0) { this.cols.push(_v); } else {
+                                                _row[this.cols[_pos[1]]] = _v; 
+                                            }
                                         }
                                         if (_r > 0) _d0.push(_row);
                                     }
@@ -97,19 +101,43 @@ export class ExcelDataHandler extends ExcelCore {
         });
     }
 
+    async buildData(): Promise<JSZip> {
+        const zip = new JSZip();
+        await (async () => {
+            const _keys = Object.keys(this.schema);
+            for (const _k of _keys) {
+                if (_k !== 'xl/sharedStrings.xml') {
+                    let _v: string | null = this.schema[_k];
+                    if (_v && _v.includes('{placeholder}')) {
+                        _v = this.updateSchema(_k);
+                    }
+                    if (_v) { zip.file(_k, _v); }
+                }
+            }
+            if (_keys.includes('xl/sharedStrings.xml')) {
+                let _v : string | null = this.schema['xl/sharedStrings.xml'];
+                if (_v && _v.includes('{placeholder}')) {
+                    _v = this.updateSchema('xl/sharedStrings.xml');
+                }
+                if (_v) {zip.file('xl/sharedStrings.xml', _v); }
+            }
+        })();
+        return zip;
+    }
+
     protected addSheet(sheetName: string, data: any, sheetId: number = 0): void {
         const _sheetName = sheetName.toLocaleLowerCase();
         let _sheetId = (sheetId < 1 ? (Object.keys(this.sheets).length + 1) : sheetId);
-        if (this.sheets.hasOwnProperty(_sheetName)) { _sheetId = this.sheets[_sheetName].id; }
-        this.sheets[_sheetName] = { name: _sheetName, id: _sheetId, data };
+        if (this.sheets.hasOwnProperty(_sheetName)) { _sheetId = this.sheets[_sheetName].id; sheetName = this.sheets[_sheetName].name; }
+        this.sheets[_sheetName] = { name: sheetName, id: _sheetId, data: data };
         this.schema[`xl/worksheets/${_sheetName}.xml`] = `<?xml version="1.0" ?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><sheetData>{placeholder}</sheetData></worksheet>`;
     }
 
-    protected updateData(sheetName: string, data: any, sheetId: number = 0):void{
+    protected updateData(sheetName: string, data: any, sheetId: number = 0): void {
         this.addSheet(sheetName, data, sheetId);
     }
 
-    protected getSheetData(sheetName: string): any {
+    getSheetData(sheetName: string): any {
         let _sheetName: string | undefined = sheetName.toLocaleLowerCase();
         if (!(_sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName))) {
             _sheetName = Object.keys(this.sheets)[0];
@@ -189,7 +217,7 @@ export class ExcelDataHandler extends ExcelCore {
                     break;
                 case 'xl/sharedStrings.xml':
                     _so = Object.keys(this.shared);
-                    for (const _s of _so) {
+                    for (const _s of _so.map(Number)) {
                         _xml += `<si><t>${this.shared[_s]}</t></si>`;
                     }
                     _ret = _ret.replace('{placeholder}', `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${_xml}</sst>`);
