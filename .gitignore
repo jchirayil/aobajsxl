@@ -137,8 +137,8 @@ dist
 .pnp.*
 
 # VSCode
-.vscode/
-.vscode-test/
+.vscode
 
 # misc
 .DS_Store
+test/data/*-copy.*

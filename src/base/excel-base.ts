@@ -22,8 +22,12 @@ export class ExcelBase {
     await this.zipHandler.writeZip(zip, filename);
   }
 
-  getSheetData(sheetName: string): any[] {
+  getData(sheetName: string): any[] {
     return this.dataHandler.getSheetData(sheetName);
+  }
+
+  setData(sheetName: string, data: any[]): void {
+    this.dataHandler.setSheetData(sheetName, data);
   }
 
   async process(zip: JSZip, actionType: string = 'write'): Promise<void> {

@@ -145,6 +145,13 @@ export class ExcelDataHandler extends ExcelCore {
         return this.sheets[_sheetName].data;
     }
 
+    setSheetData(sheetName: string, data: any): void {
+        let _sheetName: string | undefined = sheetName.toLocaleLowerCase();
+        if (!(_sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName))) {
+            this.addSheet(sheetName, data);
+        }
+    }
+
     protected updateSchema(key: string): string {
         let _so: string[] = [];
         let _xml = '';

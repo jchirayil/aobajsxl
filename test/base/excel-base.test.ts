@@ -12,16 +12,22 @@ describe('ExcelBase', () => {
     excelBase = new ExcelBase();
   });
 
-  /*
-  it('should add a sheet and retrieve its data', () => {
+  it('should add a sheet and retrieve its data', async() => {
     const sheetName = 'TestSheet';
     const data = [{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }];
-    excelBase['addSheet'](sheetName, data); // Accessing protected method
+    excelBase['setData'](sheetName, data); // Accessing protected method
 
-    const retrievedData = excelBase['getSheetData'](sheetName); // Accessing protected method
+    const retrievedData = excelBase['getData'](sheetName); // Accessing protected method
     expect(retrievedData).to.deep.equal(data);
+
+    const targetFilePath = path.join(__dirname, '../data/test1-copy.xlsx'); // Construct the target file path
+    await excelBase.write(targetFilePath);
+
+    expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
+
   });
 
+  /*
   it('should update sheet data', () => {
     const sheetName = 'UpdateSheet';
     const initialData = [{ name: 'Charlie', age: 35 }];
@@ -41,7 +47,7 @@ describe('ExcelBase', () => {
     await excelBase.read(filePath);
 
     // Add assertions to verify the data read from the XLSX file
-    const sheetData = excelBase['getSheetData']('Sheet1'); // Adjust the sheet name
+    const sheetData = excelBase['getData']('Sheet1'); // Adjust the sheet name
 
     expect(sheetData).to.be.an('array');
     // Add more specific assertions based on the content of your test.xlsx file
