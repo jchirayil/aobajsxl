@@ -146,9 +146,12 @@ export class ExcelDataHandler extends ExcelCore {
     }
 
     setSheetData(sheetName: string, data: any): void {
-        let _sheetName: string | undefined = sheetName.toLocaleLowerCase();
-        if (!(_sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName))) {
+        const _sheetName: string | undefined = sheetName.toLocaleLowerCase();
+        const _foundSheet: boolean = (_sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName));
+        if (!_foundSheet) {
             this.addSheet(sheetName, data);
+        } else {
+            this.updateData(sheetName, data);
         }
     }
 

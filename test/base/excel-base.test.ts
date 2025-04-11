@@ -24,21 +24,21 @@ describe('ExcelBase', () => {
     await excelBase.write(targetFilePath);
 
     expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
-
+    fs.unlinkSync(targetFilePath); // Clean up the test file
   });
 
-  /*
+
   it('should update sheet data', () => {
     const sheetName = 'UpdateSheet';
     const initialData = [{ name: 'Charlie', age: 35 }];
     const updatedData = [{ name: 'David', age: 40 }];
-    excelBase['addSheet'](sheetName, initialData);
-    excelBase['updateData'](sheetName, updatedData); // Accessing protected method
+    excelBase['setData'](sheetName, initialData);
+    excelBase['setData'](sheetName, updatedData); // Accessing protected method
 
-    const retrievedData = excelBase['getSheetData'](sheetName);
+    const retrievedData = excelBase['getData'](sheetName);
     expect(retrievedData).to.deep.equal(updatedData);
   });
-*/
+
 
   it('should read from an actual XLSX file', async () => {
     const filePath = path.join(__dirname, '../data/test-base.xlsx'); // Construct the file path
@@ -64,19 +64,17 @@ describe('ExcelBase', () => {
     await excelBase.write(targetFilePath);
 
     expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
-
+fs.unlinkSync(targetFilePath); // Clean up the test file
   });
   
 
-  /*
   it('should write to a zip file', async () => {
-    const zip = new JSZip();
-    excelBase['addSheet']('test', [{test: 'value'}]);
-    await excelBase.process(zip, 'write');
-    await excelBase.write(zip, 'write_test.xlsx');
-    expect(fs.existsSync('write_test.xlsx')).to.be.true;
-    fs.unlinkSync('write_test.xlsx');
+    const filePath = path.join(__dirname, '../data/test-new-write.xlsx'); // Construct the file path
+    excelBase['setData']('test', [{test: 'value'}]);
+    await excelBase.write(filePath);
+    expect(fs.existsSync(filePath)).to.be.true;
+    fs.unlinkSync(filePath);
   });
-*/
+
   // Add more tests for other methods (process, read, etc.)
 });
