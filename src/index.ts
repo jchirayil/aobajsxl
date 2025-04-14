@@ -39,5 +39,4 @@ export class Excel {
       // ... use zipHandler to write the zip file
     }
   }
-
 }

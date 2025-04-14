@@ -10,11 +10,11 @@ export class ExcelZipHandler {
   }
 
   async writeZip(zip: JSZip, fileName: string): Promise<void> {
-    const buffer = await zip.generateAsync({ 
+    const buffer = await zip.generateAsync({
       type: 'nodebuffer',
       compression: 'DEFLATE',
       compressionOptions: { level: 9 },
-      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
     fs.writeFileSync(fileName, buffer);
   }
