@@ -84,11 +84,13 @@ link.click();
 
 ## Project Structure
 
+```
 src/
 ├── base/
 │   ├── excel-core.ts          # Core functionality for handling Excel components
 │   ├── excel-data-handler.ts  # Internal class for parsing and generating Excel files
 ├── index.ts                   # Entry point exposing the Excel class
+```
 
 ## Development
 
@@ -148,4 +150,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For questions or support, please open an issue on the GitHub repository.
+For questions or support, please open an issue on the [GitHub repository](https://github.com/jchirayil/aobajsxl/issues).
