@@ -1,15 +1,14 @@
 // test/base/excel-base.test.ts
 import { expect } from 'chai';
-import { ExcelBase } from '../../src/base/excel-base';
-import JSZip from 'jszip';
+import { Excel } from '../../src/index';
 import fs from 'fs';
 import path from 'path';
 
-describe('ExcelBase', () => {
-  let excelBase: ExcelBase;
+describe('Excel', () => {
+  let excelBase: Excel;
 
   beforeEach(() => {
-    excelBase = new ExcelBase();
+    excelBase = new Excel();
   });
 
   it('should add a sheet and retrieve its data', async() => {
