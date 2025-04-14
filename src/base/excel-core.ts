@@ -180,7 +180,7 @@ export class ExcelCore {
   }
 
   private flatten(obj: any): any {
-    let _obj1 = JSON.parse(JSON.stringify(obj));
+    const _obj1 = JSON.parse(JSON.stringify(obj));
     const _obj2 = JSON.parse(JSON.stringify(obj));
 
     const __propCheck = (obj: any, key: string): boolean => {

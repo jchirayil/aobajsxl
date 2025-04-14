@@ -73,6 +73,7 @@ export class ExcelDataHandler extends ExcelCore {
                       _rg0 = /<row\s[^>]*>((<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>)*)<\/row>/gim;
                       _rs0 = [...fileContent.matchAll(_rg0)];
                       let _row: { [key: string]: any } = {};
+                      _d0 = [];
                       for (let _r = 0; _r < _rs0.length; _r++) {
                         _row = {};
                         _rg0 = /<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>/gim;
@@ -94,7 +95,9 @@ export class ExcelDataHandler extends ExcelCore {
                             _row[this.cols[_pos[1]]] = _v;
                           }
                         }
-                        if (_r > 0) _d0.push(_row);
+                        if (_r > 0) {
+                          _d0.push(_row);
+                        }
                       }
                       this.updateData(_sn, _d0);
                     }
