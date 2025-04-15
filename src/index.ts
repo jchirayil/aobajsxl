@@ -22,6 +22,10 @@ export class Excel {
     await this.zipHandler.writeZip(zip, filename);
   }
 
+  getSheetNames(): string[] {
+    return this.dataHandler.getSheetNames();
+  }
+
   getData(sheetName: string): any[] {
     return this.dataHandler.getSheetData(sheetName);
   }

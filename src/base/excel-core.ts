@@ -13,9 +13,10 @@ interface SharedStringsRev {
 }
 
 interface Sheets {
-  [key: string]: {
+  [rId: string]: {
     name: string;
     id: number;
+    target: string;
     data: any;
   };
 }
