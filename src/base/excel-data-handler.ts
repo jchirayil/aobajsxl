@@ -11,8 +11,8 @@ export class ExcelDataHandler extends ExcelCore {
     let _rg0: RegExp | null = null;
     let _rg1: RegExp | null = null;
     let _rs0: RegExpMatchArray[] = [];
-    let _rs1: RegExpMatchArray | null | undefined;
     let _rs2: RegExpMatchArray[] | null | undefined;
+    let match;
     await (async () => {
       Object.keys(zip.files).map(async (file) => {
         if (!this.schema.hasOwnProperty(file)) {
@@ -45,18 +45,22 @@ export class ExcelDataHandler extends ExcelCore {
                 case 'xl/workbook.xml':
                   _rg0 = /<sheets>([^]*)<\/sheets>/gim;
                   this.schema[file] = fileContent.replace(_rg0, '<sheets>{placeholder}</sheets>');
-                  _rs0 = [...fileContent.matchAll(_rg0)];
-                  _rg0 = /\bname="([^"]*)"/;
-                  for (const _r of _rs0) {
-                    _rs1 = _r[1]?.match(_rg0);
-                    if (_rs1) {
-                      this.addSheet(_rs1[1], null);
-                    }
+                  _rg0 = /<sheet\s+[^>]*name="([^"]+)"[^>]*>/g;
+                  while ((match = _rg0.exec(fileContent)) !== null) {
+                    const sheetName = match[1];
+                    const sheetId = parseInt(match[0].match(/sheetId="(\d+)"/)?.[1] || '0', 10);
+                    this.addSheet(sheetName, null, sheetId);
                   }
                   break;
                 case 'xl/_rels/workbook.xml.rels':
                   _rg0 = /<relationship\s([^]*)\/>/gim;
                   this.schema[file] = fileContent.replace(_rg0, '{placeholder}');
+                  _rg0 = /<Relationship\s+[^>]*Target="([^"]+)"[^>]*>/g;
+                  while ((match = _rg0.exec(fileContent)) !== null) {
+                    const target = match[1];
+                    const rId = match[0].match(/Id="([^"]+)"/)?.[1] || '';
+                    this.updateSheetTarget(rId, target);
+                  }
                   break;
                 case '[Content_Types].xml':
                   _rg0 = /<Override([^]*)\/>/gim;
@@ -64,12 +68,12 @@ export class ExcelDataHandler extends ExcelCore {
                   break;
                 default:
                   if (file.includes('xl/worksheets/')) {
-                    const matches = file.match(/(?:.*\/)?([^/]+?)(?=\.[^/.]*$)/);
+                    const matches = file.match(/worksheets\/[^/]+\.xml/);
                     if (matches) {
-                      const _sn = matches[1];
+                      const _sn = matches[0];
                       let _d0: any[] = [];
                       _rg0 = /<sheetData>([^]*)<\/sheetData>/gim;
-                      this.schema[file] = fileContent.replace(_rg0, '{placeholder}');
+                      this.schema[file] = fileContent.replace(_rg0, '<sheetData>{placeholder}</sheetData>');
                       _rg0 = /<row\s[^>]*>((<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>)*)<\/row>/gim;
                       _rs0 = [...fileContent.matchAll(_rg0)];
                       let _row: { [key: string]: any } = {};
@@ -140,42 +144,70 @@ export class ExcelDataHandler extends ExcelCore {
     return zip;
   }
 
-  protected addSheet(sheetName: string, data: any, sheetId: number = 0): void {
-    const _sheetName = sheetName.toLocaleLowerCase();
-    let _sheetId = sheetId < 1 ? Object.keys(this.sheets).length + 1 : sheetId;
-    if (this.sheets.hasOwnProperty(_sheetName)) {
-      _sheetId = this.sheets[_sheetName].id;
-      sheetName = this.sheets[_sheetName].name;
+  protected addSheet(
+    sheetName: string,
+    data: any,
+    sheetId: number = 0,
+    relationId: string = '',
+    target: string = ''
+  ): void {
+    const _sheetKey = Object.keys(this.sheets).find((key) => this.sheets[key].name === sheetName);
+    let _rId: string = '';
+    let _sheetId: number = 0;
+    let _target: string = '';
+    if (_sheetKey) {
+      _rId = _sheetKey;
+      _sheetId = this.sheets[_sheetKey].id;
+    } else {
+      _sheetId = sheetId < 1 ? Object.keys(this.sheets).length + 1 : sheetId;
+      _rId = relationId.length > 0 ? relationId : `rId${_sheetId}`;
     }
-    this.sheets[_sheetName] = { name: sheetName, id: _sheetId, data: data };
-    this.schema[`xl/worksheets/${_sheetName}.xml`] =
+    if (this.sheets.hasOwnProperty(_rId)) {
+      _sheetId = this.sheets[_rId].id;
+      sheetName = this.sheets[_rId].name;
+      _target = this.sheets[_rId].target;
+    } else {
+      _target = target.length > 0 ? target : `worksheets/sheet${_sheetId}.xml`;
+    }
+    this.sheets[_rId] = { name: sheetName, id: _sheetId, target: _target, data: data };
+    this.schema[`xl/${_target}`] =
       `<?xml version="1.0" ?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><sheetData>{placeholder}</sheetData></worksheet>`;
   }
 
-  protected updateData(sheetName: string, data: any, sheetId: number = 0): void {
-    this.addSheet(sheetName, data, sheetId);
+  protected updateSheetTarget(relationId: string, target: string): void {
+    if (this.sheets.hasOwnProperty(relationId)) {
+      this.sheets[relationId].target = target;
+    }
+  }
+
+  protected updateData(target: string, data: any): void {
+    // Find the sheet that matches the target value
+    const sheetKey = Object.keys(this.sheets).find((key) => this.sheets[key].target === target);
+
+    // If a matching sheet is found, update its data property
+    if (sheetKey) {
+      this.sheets[sheetKey].data = data;
+    }
+  }
+
+  getSheetNames(): string[] {
+    return Object.keys(this.sheets).map((sheetName) => this.sheets[sheetName].name);
   }
 
   getSheetData(sheetName: string): any {
-    let _sheetName: string | undefined = sheetName.toLocaleLowerCase();
-    if (!(_sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName))) {
-      _sheetName = Object.keys(this.sheets)[0];
+    const sheetKey = Object.keys(this.sheets).find((key) => this.sheets[key].name === sheetName);
+    if (sheetKey) {
+      return this.sheets[sheetKey].data;
     }
-    return this.sheets[_sheetName].data;
+    return null;
   }
 
   setSheetData(sheetName: string, data: any): void {
-    const _sheetName: string | undefined = sheetName.toLocaleLowerCase();
-    const _foundSheet: boolean = _sheetName.length > 0 && this.sheets.hasOwnProperty(_sheetName);
-    if (!_foundSheet) {
-      this.addSheet(sheetName, data);
-    } else {
-      this.updateData(sheetName, data);
-    }
+    this.addSheet(sheetName, data);
   }
 
   protected updateSchema(key: string): string {
-    let _so: string[] = [];
+    let _rids: string[] = [];
     let _xml = '';
     let _ret = this.schema[key];
     let _id = 0;
@@ -184,21 +216,21 @@ export class ExcelDataHandler extends ExcelCore {
     if (_ret && _ret.includes('{placeholder}')) {
       switch (key) {
         case 'xl/workbook.xml':
-          _so = Object.keys(this.sheets);
-          for (const sheetName of _so) {
-            _id = this.sheets[sheetName].id;
-            _xml += `<sheet name="${this.sheets[sheetName].name}" sheetId="${_id}" r:id="rId${_id}"/>`;
+          _rids = Object.keys(this.sheets);
+          for (const _rid of _rids) {
+            _id = this.sheets[_rid].id;
+            _xml += `<sheet name="${this.sheets[_rid].name}" sheetId="${this.sheets[_rid].id}" r:id="${_rid}"/>`;
           }
           _ret = _ret.replace('{placeholder}', _xml);
           break;
         case 'xl/_rels/workbook.xml.rels':
-          _so = Object.keys(this.sheets);
-          for (const sheetName of _so) {
-            _id = this.sheets[sheetName].id;
+          _rids = Object.keys(this.sheets);
+          for (const _rid of _rids) {
+            _id = this.sheets[_rid].id;
             if (_id > _lid) {
               _lid = _id;
             }
-            _xml += `<Relationship Id="rId${_id}" Target="worksheets/${sheetName.toLocaleLowerCase()}.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"/>`;
+            _xml += `<Relationship Id="${_rid}" Target="${this.sheets[_rid].target}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"/>`;
           }
           if (this.schema['xl/sharedStrings.xml']) {
             _lid++;
@@ -225,9 +257,9 @@ export class ExcelDataHandler extends ExcelCore {
           break;
         case '[Content_Types].xml':
           _xml += `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`;
-          _so = Object.keys(this.sheets);
-          for (const sheetName of _so) {
-            _xml += `<Override PartName="/xl/worksheets/${sheetName.toLocaleLowerCase()}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+          _rids = Object.keys(this.sheets);
+          for (const _rid of _rids) {
+            _xml += `<Override PartName="/xl/${this.sheets[_rid].target}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
           }
           if (this.schema['xl/sharedStrings.xml']) {
             _xml += `<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>`;
@@ -247,9 +279,9 @@ export class ExcelDataHandler extends ExcelCore {
           _ret = _ret.replace('{placeholder}', _xml);
           break;
         case 'xl/sharedStrings.xml':
-          _so = Object.keys(this.shared);
-          for (const _s of _so.map(Number)) {
-            _xml += `<si><t>${this.shared[_s]}</t></si>`;
+          _rids = Object.keys(this.shared);
+          for (const _rid of _rids.map(Number)) {
+            _xml += `<si><t>${this.shared[_rid]}</t></si>`;
           }
           _ret = _ret.replace(
             '{placeholder}',
@@ -258,13 +290,14 @@ export class ExcelDataHandler extends ExcelCore {
           break;
         default:
           if (key.includes('xl/worksheets/')) {
-            const match = key.match(/(?:.*\/)?([^\/]+?)(?=(?:\.[^\/.]*)?$)/);
+            const match = key.match(/xl\/(worksheets\/[^/]+\.xml)/);
             if (match) {
               const sheetName = match[1];
-              _ret = _ret.replace('{placeholder}', this.ws(this.sheets[sheetName].data));
+              const sheetKey = Object.keys(this.sheets).find((key) => this.sheets[key].target === sheetName);
+              if (sheetKey) {
+                _ret = _ret.replace('{placeholder}', this.ws(this.sheets[sheetKey].data));
+              }
             }
-          } else {
-            console.log('Error: schema has {placeholder} tag.');
           }
           break;
       }

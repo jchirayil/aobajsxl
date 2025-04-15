@@ -22,7 +22,7 @@ describe('Excel', () => {
     const retrievedData = excelBase['getData'](sheetName); // Accessing protected method
     expect(retrievedData).to.deep.equal(data);
 
-    const targetFilePath = path.join(__dirname, '../data/test1-copy.xlsx'); // Construct the target file path
+    const targetFilePath = path.join(__dirname, '../data/test-base-copy-1.xlsx'); // Construct the target file path
     await excelBase.write(targetFilePath);
 
     expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
@@ -53,13 +53,24 @@ describe('Excel', () => {
     // Add more specific assertions based on the content of your test.xlsx file
   });
 
+  it('should get sheet names', async () => {
+    const filePath = path.join(__dirname, '../data/test-sheets.xlsx'); // Construct the file path
+    expect(fs.existsSync(filePath)).to.be.true; // Check if the file exists
+    await excelBase.read(filePath);
+    const sheetNames = excelBase.getSheetNames();
+    expect(sheetNames).to.be.an('array');
+    expect(sheetNames).to.include('DepartmentSheet'); // Adjust the expected sheet name
+    expect(sheetNames).to.include('CompanySheet'); // Adjust the expected sheet name
+    expect(sheetNames).to.include('TransactionSheet'); // Adjust the expected sheet name
+  });
+  
   it('should read from an actual XLSX file and then save as a new file', async () => {
     const filePath = path.join(__dirname, '../data/test-base.xlsx'); // Construct the file path
     expect(fs.existsSync(filePath)).to.be.true; // Check if the file exists
 
     await excelBase.read(filePath);
 
-    const targetFilePath = path.join(__dirname, '../data/test-base-copy.xlsx'); // Construct the target file path
+    const targetFilePath = path.join(__dirname, '../data/test-base-copy-2.xlsx'); // Construct the target file path
     await excelBase.write(targetFilePath);
 
     expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
