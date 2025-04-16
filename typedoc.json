@@ -1,0 +1,10 @@
+{
+    "entryPoints": ["src/index.ts"], // Entry point for your library
+    "out": "docs",                  // Output directory for the documentation
+    "plugin": ["typedoc-plugin-markdown"], // Use the Markdown plugin
+    "exclude": ["**/node_modules/**", "**/test/**"], // Exclude unnecessary files
+    "excludeExternals": true,       // Exclude external modules
+    "excludePrivate": true,         // Exclude private members
+    "excludeProtected": true,       // Exclude protected members
+    "includeVersion": true          // Include the version from package.json
+  }

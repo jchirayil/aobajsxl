@@ -142,3 +142,4 @@ dist
 # misc
 .DS_Store
 test/data/*-copy.*
+docs/
