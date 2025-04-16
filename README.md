@@ -72,7 +72,7 @@ await excel.write('example.xlsx');
 
 ## API Reference
 
-API Document - [Excel](Excel.md)
+API Document - [Excel](excel.md)
 
 ## Project Structure
 
