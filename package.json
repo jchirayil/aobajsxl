@@ -10,7 +10,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "prepublishOnly": "npm run test && npm run lint"
+    "prepublishOnly": "npm run test && npm run lint",
+    "docs": "typedoc && mv docs/globals.md ./globals.md && mv docs/classes/Excel.md ./excel.md && rm -rf docs"
   },
   "keywords": [
     "json",
@@ -35,6 +36,8 @@
     "mocha": "^11.1.0",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
+    "typedoc": "^0.28.2",
+    "typedoc-plugin-markdown": "^4.6.2",
     "typescript": "^5.8.2"
   },
   "files": [

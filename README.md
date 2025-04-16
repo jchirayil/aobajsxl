@@ -45,14 +45,11 @@ import { Excel } from 'aobajsxl';
 
 const excel = new Excel();
 
-// Load an Excel file as a binary ArrayBuffer
-const fileData = await fetch('example.xlsx').then((res) => res.arrayBuffer());
-
-// Parse the Excel file
-await excel.parse(fileData);
+// Load an Excel file
+await excel.read('example.xlsx');
 
 // Access sheet data
-const sheetData = excel.getSheetData('Sheet1');
+const sheetData = excel.getData('Sheet1');
 console.log(sheetData);
 ```
 
@@ -64,23 +61,18 @@ import { Excel } from 'aobajsxl';
 const excel = new Excel();
 
 // Add data to a sheet
-excel.setSheetData('Sheet1', [
+excel.setData('Sheet1', [
     { Name: 'Alice', Age: 25 },
     { Name: 'Bob', Age: 30 },
 ]);
 
 // Generate the Excel file
-const excelFile = await excel.generate();
-
-// Save the file (e.g., in a browser)
-const blob = new Blob([excelFile], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-const link = document.createElement('a');
-link.href = URL.createObjectURL(blob);
-link.download = 'example.xlsx';
-link.click();
+await excel.write('example.xlsx');
 ```
 
 ## API Reference
+
+API Document - [Excel](Excel.md)
 
 ## Project Structure
 
