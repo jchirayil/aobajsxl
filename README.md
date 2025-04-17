@@ -139,6 +139,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 * [JSZip](https://stuk.github.io/jszip) for Zip file handling.
 * OpenXML standards for Excel file structure.
+  * [OpenXML SDK](https://learn.microsoft.com/en-us/office/open-xml/open-xml-sdk)
+  * [OpenXML Reference](https://developer.adobe.com/experience-manager/reference-materials/cloud-service/javadoc/org/openxmlformats/schemas/spreadsheetml/x2006/main/package-summary.html)
 
 ## Contact
 
