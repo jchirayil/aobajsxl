@@ -24,21 +24,21 @@
   "license": "MIT",
   "description": "A TypeScript library to transform JSON to XLSX files.",
   "devDependencies": {
-    "@types/chai": "^5.2.0",
+    "@types/chai": "^5.2.1",
     "@types/mocha": "^10.0.10",
-    "@typescript-eslint/eslint-plugin": "^8.26.1",
-    "@typescript-eslint/parser": "^8.26.1",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
     "chai": "^5.2.0",
-    "eslint": "^9.22.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
+    "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
     "jszip": "^3.10.1",
     "mocha": "^11.1.0",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.2",
-    "typedoc-plugin-markdown": "^4.6.2",
-    "typescript": "^5.8.2"
+    "typedoc": "^0.28.3",
+    "typedoc-plugin-markdown": "^4.6.3",
+    "typescript": "^5.8.3"
   },
   "files": [
     "dist"
