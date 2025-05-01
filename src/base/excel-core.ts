@@ -132,6 +132,7 @@ export class ExcelCore {
 
   private cell(index: number, value: any, rowIndex: number): string {
     let _cell = '';
+    let _cellValue = '';
     let _type = this.type(value);
     if (value === undefined || value === null) {
       _type = 'null';
@@ -147,11 +148,12 @@ export class ExcelCore {
         _cell = `<c r="${this.base(index, rowIndex)}" t="d"><v>${value}</v></c>`;
         break;
       case 'formula':
-        if (typeof value === 'string' && value.startsWith('=')) {
-          _cell = `<c r="${this.base(index, rowIndex)}" ><f>${value.substring(1)}</f></c>`;
-        } else {
-          _cell = `<c r="${this.base(index, rowIndex)}"><v>${value}</v></c>`;
-        }
+        value = value.replace(/\[@([^\]]+)\]/g, (_: any, match: string) => {
+          return this.base(this.ci(match), rowIndex);
+        });
+        _cellValue =
+          typeof value === 'string' && value.startsWith('=') ? `<f>${value.substring(1)}</f>` : `<v>${value}</v>`;
+        _cell = `<c r="${this.base(index, rowIndex)}">${_cellValue}</c>`;
         break;
       case 'null':
       case 'string':

@@ -85,8 +85,8 @@ describe('Excel', () => {
     fs.unlinkSync(filePath);
   });
 
-  it('should write formula to a zip file', async () => {
-    const filePath = path.join(__dirname, '../data/test-new-formula.xlsx'); // Construct the file path
+  it('should write formula - simple - to a zip file', async () => {
+    const filePath = path.join(__dirname, '../data/test-new-formula-simple.xlsx'); // Construct the file path
     excelBase['setData']('FormulaSheet', [
         {id: 1, operation: 'multiplication', total: '=20*3'},
         {id: 2, operation: 'addition', total: '=5+2+4'}, 
@@ -101,11 +101,22 @@ describe('Excel', () => {
         {id: 11, operation: 'max', total: '=MAX(1,2,3,4,5)'},
         {id: 12, operation: 'min', total: '=MIN(1,2,3,4,5)'},
         {id: 13, operation: 'if', total: '=IF(1>2, "True", "False")'},
-        {id: 14, operation: 'concatenate', total: '=CONCATENATE("Hello", " ", "World")'},    
+        {id: 14, operation: 'concatenate', total: '=CONCATENATE("Hello", " ", "World")'}
     ]);
     await excelBase.write(filePath);
     expect(fs.existsSync(filePath)).to.be.true;
     fs.unlinkSync(filePath);
   });
 
+  it('should write formula - reference - to a zip file', async () => {
+    const filePath = path.join(__dirname, '../data/test-new-formula-ref.xlsx'); // Construct the file path
+    excelBase['setData']('FormulaSheet', [
+        {id: 1, product: 'Apple', quantity: 12, price: 3, total: '=[@quantity]*[@price]'},
+        {id: 2, product: 'Banana', quantity: 12, price: 0.2, total: '=[@quantity]*[@price]'},
+        {id: 3, product: 'Cherry', quantity: 5, price: 4, total: '=[@quantity]*[@price]'}   
+    ]);
+    await excelBase.write(filePath);
+    expect(fs.existsSync(filePath)).to.be.true;
+    fs.unlinkSync(filePath);
+  });
 });
