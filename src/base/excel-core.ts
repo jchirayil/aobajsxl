@@ -146,6 +146,13 @@ export class ExcelCore {
       case 'date':
         _cell = `<c r="${this.base(index, rowIndex)}" t="d"><v>${value}</v></c>`;
         break;
+      case 'formula':
+        if (typeof value === 'string' && value.startsWith('=')) {
+          _cell = `<c r="${this.base(index, rowIndex)}" ><f>${value.substring(1)}</f></c>`;
+        } else {
+          _cell = `<c r="${this.base(index, rowIndex)}"><v>${value}</v></c>`;
+        }
+        break;
       case 'null':
       case 'string':
         _cell = `<c r="${this.base(index, rowIndex)}" t="s"><v>${this.findSharedString(this.fix(value))}</v></c>`;
@@ -168,6 +175,8 @@ export class ExcelCore {
       _type = 'bool';
     } else if (val != null && !isNaN(val)) {
       _type = 'number';
+    } else if (typeof val === 'string' && val.startsWith('=')) {
+      _type = 'formula';
     }
     return _type;
   }
