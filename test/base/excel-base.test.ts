@@ -120,7 +120,7 @@ describe('Excel', () => {
     fs.unlinkSync(filePath);
   });
 
-  it('should write erroneous formula as is', async () => {
+  it('should write incorrect formula as is', async () => {
     const filePath = path.join(__dirname, '../data/test-error-formula.xlsx'); // Construct the file path
     excelBase['setData']('FormulaSheet', [
         {id: 1, operation: 'multiplication', total: '=*3'},
