@@ -85,5 +85,38 @@ describe('Excel', () => {
     fs.unlinkSync(filePath);
   });
 
-  // Add more tests for other methods (process, read, etc.)
+  it('should write formula - simple - to a zip file', async () => {
+    const filePath = path.join(__dirname, '../data/test-new-formula-simple.xlsx'); // Construct the file path
+    excelBase['setData']('FormulaSheet', [
+        {id: 1, operation: 'multiplication', total: '=20*3'},
+        {id: 2, operation: 'addition', total: '=5+2+4'}, 
+        {id: 3, operation: 'subtraction', total: '=152-24'},
+        {id: 4, operation: 'division', total: '=100/5'},
+        {id: 5, operation: 'exponentiation', total: '=2^3'},
+        {id: 6, operation: 'modulus', total: '=MOD(10,3)'},
+        {id: 7, operation: 'square root', total: '=SQRT(16)'},
+        {id: 8, operation: 'average', total: '=AVERAGE(1,2,3,4,5)'},
+        {id: 9, operation: 'sum', total: '=SUM(1,2,3,4,5)'},
+        {id: 10, operation: 'count', total: '=COUNT(1,2,3,4,5)'},
+        {id: 11, operation: 'max', total: '=MAX(1,2,3,4,5)'},
+        {id: 12, operation: 'min', total: '=MIN(1,2,3,4,5)'},
+        {id: 13, operation: 'if', total: '=IF(1>2, "True", "False")'},
+        {id: 14, operation: 'concatenate', total: '=CONCATENATE("Hello", " ", "World")'}
+    ]);
+    await excelBase.write(filePath);
+    expect(fs.existsSync(filePath)).to.be.true;
+    fs.unlinkSync(filePath);
+  });
+
+  it('should write formula - reference - to a zip file', async () => {
+    const filePath = path.join(__dirname, '../data/test-new-formula-ref.xlsx'); // Construct the file path
+    excelBase['setData']('FormulaSheet', [
+        {id: 1, product: 'Apple', quantity: 12, price: 3, total: '=[@quantity]*[@price]'},
+        {id: 2, product: 'Banana', quantity: 12, price: 0.2, total: '=[@quantity]*[@price]'},
+        {id: 3, product: 'Cherry', quantity: 5, price: 4, total: '=[@quantity]*[@price]'}   
+    ]);
+    await excelBase.write(filePath);
+    expect(fs.existsSync(filePath)).to.be.true;
+    fs.unlinkSync(filePath);
+  });
 });
