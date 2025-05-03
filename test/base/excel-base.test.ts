@@ -131,6 +131,20 @@ describe('Excel', () => {
     ]);
     await excelBase.write(filePath);
     expect(fs.existsSync(filePath)).to.be.true;
+    fs.unlinkSync(filePath);
+  });
+
+  it('should write large number of records', async () => {
+    const filePath = path.join(__dirname, '../data/test-large-records.xlsx'); // Construct the file path
+    var data:any[]=[]
+    for (var i=0; i<10000; i++){
+      data.push({
+        id: i, name: "Row" + (i+1), value: 15000*(i+1),
+      })
+    }
+    excelBase['setData']('ExtensiveSheet', data);
+    await excelBase.write(filePath);
+    expect(fs.existsSync(filePath)).to.be.true;
     // fs.unlinkSync(filePath);
   });
 });
