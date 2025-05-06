@@ -12,14 +12,19 @@ interface SharedStringsRev {
   [key: string]: number;
 }
 
-interface Sheets {
-  [rId: string]: {
-    name: string;
-    id: number;
-    target: string;
-    data: any;
-  };
+interface Sheet {
+  name: string;
+  id: number;
+  target: string;
+  data: any[]; // Expecting an array of rows
 }
+
+interface Sheets {
+  [rId: string]: Sheet;
+}
+
+const MAX_SHARED_STRING_LENGTH = 32767;
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export class ExcelCore {
   protected schema: Schema = {
@@ -36,6 +41,12 @@ export class ExcelCore {
 
   constructor() {}
 
+  /**
+   * Adds a string to the shared strings table.
+   * @param text The string to add.
+   * @param index Optional index to insert the string at. If -1, appends to the end.
+   * @returns The index of the added/existing shared string.
+   */
   protected addSharedString(text: string, index: number = -1): number {
     if (index < 0) {
       index = Object.keys(this.shared).length;
@@ -50,8 +61,14 @@ export class ExcelCore {
     }
   }
 
+  /**
+   * Finds or adds a string to the shared strings table.
+   * Limits the string length to MAX_SHARED_STRING_LENGTH.
+   * @param text The string to find or add.
+   * @returns The index of the shared string.
+   */
   protected findSharedString(text: string): number {
-    const _txt = text.length > 32767 ? text.substring(0, 32766) : text;
+    const _txt = text.length > MAX_SHARED_STRING_LENGTH ? text.substring(0, MAX_SHARED_STRING_LENGTH - 1) : text;
     if (this.sharedRev.hasOwnProperty(_txt)) {
       return this.sharedRev[_txt];
     } else {
@@ -59,17 +76,28 @@ export class ExcelCore {
     }
   }
 
+  /**
+   * Converts an Excel cell reference (e.g., "A1") to its column and row index (0-based).
+   * @param row The row part of the reference (e.g., "1").
+   * @param col The column part of the reference (e.g., "A").
+   * @returns An array containing the row and column index: [rowIndex, colIndex].
+   */
   protected lc(row: string, col: string): [number, number] {
-    const _b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const _r: [number, number] = [Number.parseInt(row) - 1, 0];
     col = col.toUpperCase();
     for (let i = 0, j = col.length - 1; i < col.length; i++, j--) {
-      _r[1] += Math.pow(_b.length, j) * (_b.indexOf(col[i]) + 1);
+      _r[1] += Math.pow(ALPHABET.length, j) * (ALPHABET.indexOf(col[i]) + 1);
     }
     _r[1]--;
     return _r;
   }
 
+  /**
+   * Generates the XML for a worksheet's data.
+   * Handles large datasets by processing rows incrementally.
+   * @param data An array of row objects.
+   * @returns The XML string for the <sheetData> element.
+   */
   protected ws(data: any[]): string {
     let _data = '';
     this.cols = [];
@@ -84,6 +112,11 @@ export class ExcelCore {
     return _data;
   }
 
+  /**
+   * Generates the XML for a single row.
+   * @param row An object representing a row of data.
+   * @returns The XML string for the <row> element.
+   */
   protected row(row: { [key: string]: any }, index: number): string {
     const _rowIndex = index + 2;
     let _rowCells = '';
@@ -96,6 +129,10 @@ export class ExcelCore {
     return `<row r="${_rowIndex}">${_rowCells}</row>`;
   }
 
+  /**
+   * Generates the XML for the header row.
+   * @returns The XML string for the header <row> element.
+   */
   private header(): string {
     let _headerCells = '';
     const _rowIndex = 1;
@@ -105,10 +142,22 @@ export class ExcelCore {
     return `<row r="${_rowIndex}">${_headerCells}</row>`;
   }
 
+  /**
+   * Generates the Excel cell reference (e.g., "A1").
+   * @param colIndex The 0-based column index.
+   * @param rowIndex The 1-based row index.
+   * @returns The Excel cell reference string.
+   */
   private base(colIndex: number, rowIndex: number): string {
     return `${this.cl(colIndex)}${rowIndex}`;
   }
 
+  /**
+   * Gets the column index for a given column name.
+   * If the column name doesn't exist, it's added to the `cols` array.
+   * @param col The column name.
+   * @returns The 0-based column index.
+   */
   private ci(col: string): number {
     let _index = this.cols.indexOf(col);
     if (_index < 0) {
@@ -118,6 +167,11 @@ export class ExcelCore {
     return _index;
   }
 
+  /**
+   * Converts a 0-based column index to its Excel column letter(s).
+   * @param index The 0-based column index.
+   * @returns The Excel column letter(s).
+   */
   private cl(index: number): string {
     if (typeof index !== 'number') {
       return '';
@@ -130,6 +184,13 @@ export class ExcelCore {
     return this.cl(_prefix - 1) + _letter;
   }
 
+  /**
+   * Generates the XML for a single cell.
+   * @param index The 0-based column index.
+   * @param value The cell value.
+   * @param rowIndex The 1-based row index.
+   * @returns The XML string for the <c> element.
+   */
   private cell(index: number, value: any, rowIndex: number): string {
     let _cell = '';
     let _cellValue = '';
@@ -169,6 +230,11 @@ export class ExcelCore {
     return _cell;
   }
 
+  /**
+   * Determines the data type of a value for Excel.
+   * @param val The value to check.
+   * @returns The determined data type string.
+   */
   private type(val: any): string {
     let _type = 'string';
     if ([true, false].includes(val)) {
@@ -183,6 +249,11 @@ export class ExcelCore {
     return _type;
   }
 
+  /**
+   * Fixes certain characters in text to prevent issues in Excel.
+   * @param text The text to fix.
+   * @returns The fixed text.
+   */
   private fix(text: string): string {
     let _text = text.replace(/^\+/gm, `'+`);
     _text = _text.replace(/[ ]{2,}/gi, ' ');
@@ -191,6 +262,14 @@ export class ExcelCore {
     return _text;
   }
 
+  /**
+   * Flattens a nested JavaScript object into a single-level object.
+   * Keys of nested properties are concatenated with '-'.
+   * This method might not be suitable for very large or deeply nested objects due to its recursive nature and string concatenation.
+   * Consider alternative approaches for large, complex data.
+   * @param obj The object to flatten.
+   * @returns A flattened object.
+   */
   private flatten(obj: any): any {
     const _obj1 = JSON.parse(JSON.stringify(obj));
     const _obj2 = JSON.parse(JSON.stringify(obj));

@@ -2,14 +2,39 @@
 import { ExcelCore } from './excel-core';
 import JSZip from 'jszip';
 
+const SHARED_STRINGS_REGEX = /<si><t>([^<]*)<\/t><\/si>/gim;
+const SHEET_NAME_REGEX = /<sheet\s+[^>]*name="([^"]+)"[^>]*>/g;
+const SHEET_ID_REGEX = /sheetId="(\d+)"/;
+const RELATIONSHIP_TARGET_REGEX = /<Relationship\s+[^>]*Target="([^"]+)"[^>]*>/g;
+const RELATIONSHIP_ID_REGEX = /Id="([^"]+)"/;
+const ROW_REGEX = /<row\s[^>]*>((<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>)*)<\/row>/gim;
+const CELL_REGEX = /<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>/gim;
+const CELL_REF_REGEX = /r="([A-Z]+)(\d+)"/;
+const CELL_TYPE_REGEX = /t="([^"])/;
+const CELL_VALUE_REGEX = /<v>([^<]*)<\/v>/;
+const SHEET_DATA_REGEX = /<sheetData>([^]*)<\/sheetData>/gim;
+const GENERIC_PLACEHOLDER_REGEX = /\{placeholder\}/gim;
+const OVERRIDE_REGEX = /<Override([^]*)\/>/gim;
+const RELATIONSHIP_REGEX = /<relationship\s([^]*)\/>/gim;
+const SHEET_REGEX = /<sheets>([^]*)<\/sheets>/gim;
+const WORKBOOK_REGEX = /worksheets\/[^/]+\.xml/;
+const WORKBOOK_SHEET_REGEX = /xl\/(worksheets\/[^/]+\.xml)/;
+const PLACEHOLDER = '{placeholder}';
+const SHARED_STRINGS_TABLE_REGEX = '/<sst[^]*<\/sst>/gim';
+
 export class ExcelDataHandler extends ExcelCore {
   constructor() {
     super();
   }
 
+  /**
+   * Asynchronously parses data from the Excel file (JSZip object).
+   * Processes shared strings and sheet data incrementally to handle large files.
+   * @param zip The JSZip object representing the Excel file.
+   */
   async parseData(zip: JSZip): Promise<void> {
-    let _rg0: RegExp | null = null;
-    let _rg1: RegExp | null = null;
+    //let _rg0: RegExp | null = null;
+    //let _rg1: RegExp | null = null;
     let _rs0: RegExpMatchArray[] = [];
     let _rs2: RegExpMatchArray[] | null | undefined;
     let match;
@@ -26,10 +51,8 @@ export class ExcelDataHandler extends ExcelCore {
             .file('xl/sharedStrings.xml')
             ?.async('string')
             .then((data) => {
-              _rg0 = /<sst[^]*<\/sst>/gim;
-              this.schema['xl/sharedStrings.xml'] = data.replace(_rg0, '{placeholder}');
-              _rg1 = /<si><t>([^<]*)<\/t><\/si>/gim;
-              _rs0 = [...data.matchAll(_rg1)];
+              this.schema['xl/sharedStrings.xml'] = data.replace(SHARED_STRINGS_TABLE_REGEX, PLACEHOLDER);
+              _rs0 = [...data.matchAll(SHARED_STRINGS_REGEX)];
               _rs0.forEach((_r, index) => {
                 this.addSharedString(_r[1] || '', index);
               });
@@ -43,52 +66,47 @@ export class ExcelDataHandler extends ExcelCore {
             if (fileContent) {
               switch (file) {
                 case 'xl/workbook.xml':
-                  _rg0 = /<sheets>([^]*)<\/sheets>/gim;
-                  this.schema[file] = fileContent.replace(_rg0, '<sheets>{placeholder}</sheets>');
-                  _rg0 = /<sheet\s+[^>]*name="([^"]+)"[^>]*>/g;
-                  while ((match = _rg0.exec(fileContent)) !== null) {
+                  this.schema[file] = fileContent.replace(SHEET_REGEX, `<sheets>${PLACEHOLDER}</sheets>`);
+                  while ((match = SHEET_NAME_REGEX.exec(fileContent)) !== null) {
                     const sheetName = match[1];
-                    const sheetId = parseInt(match[0].match(/sheetId="(\d+)"/)?.[1] || '0', 10);
+                    const sheetId = parseInt(match[0].match(SHEET_ID_REGEX)?.[1] || '0', 10);
                     this.addSheet(sheetName, null, sheetId);
                   }
                   break;
                 case 'xl/_rels/workbook.xml.rels':
-                  _rg0 = /<relationship\s([^]*)\/>/gim;
-                  this.schema[file] = fileContent.replace(_rg0, '{placeholder}');
-                  _rg0 = /<Relationship\s+[^>]*Target="([^"]+)"[^>]*>/g;
-                  while ((match = _rg0.exec(fileContent)) !== null) {
+                  this.schema[file] = fileContent.replace(RELATIONSHIP_REGEX, PLACEHOLDER);
+                  while ((match = RELATIONSHIP_TARGET_REGEX.exec(fileContent)) !== null) {
                     const target = match[1];
-                    const rId = match[0].match(/Id="([^"]+)"/)?.[1] || '';
+                    const rId = match[0].match(RELATIONSHIP_ID_REGEX)?.[1] || '';
                     this.updateSheetTarget(rId, target);
                   }
                   break;
                 case '[Content_Types].xml':
-                  _rg0 = /<Override([^]*)\/>/gim;
-                  this.schema[file] = fileContent.replace(_rg0, '{placeholder}');
+                  this.schema[file] = fileContent.replace(OVERRIDE_REGEX, PLACEHOLDER);
                   break;
                 default:
                   if (file.includes('xl/worksheets/')) {
-                    const matches = file.match(/worksheets\/[^/]+\.xml/);
+                    const matches = file.match(WORKBOOK_REGEX);
                     if (matches) {
                       const _sn = matches[0];
                       let _d0: any[] = [];
-                      _rg0 = /<sheetData>([^]*)<\/sheetData>/gim;
-                      this.schema[file] = fileContent.replace(_rg0, '<sheetData>{placeholder}</sheetData>');
-                      _rg0 = /<row\s[^>]*>((<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>)*)<\/row>/gim;
-                      _rs0 = [...fileContent.matchAll(_rg0)];
+                      this.schema[file] = fileContent.replace(
+                        SHEET_DATA_REGEX,
+                        `<sheetData>${PLACEHOLDER}</sheetData>`
+                      );
+                      _rs0 = [...fileContent.matchAll(ROW_REGEX)];
                       let _row: { [key: string]: any } = {};
                       _d0 = [];
                       for (let _r = 0; _r < _rs0.length; _r++) {
                         _row = {};
-                        _rg0 = /<c\s[^>]*>(<v>([^<]*)<\/v>)*<\/c>/gim;
                         const _brs0 = _rs0[_r][0];
-                        _rs2 = [..._brs0.matchAll(_rg0)];
+                        _rs2 = [..._brs0.matchAll(CELL_REGEX)];
                         for (let _c = 0; _c < _rs2.length; _c++) {
-                          const cellMatch = _rs2[_c][0].match(/r="([A-Z]+)(\d+)"/);
+                          const cellMatch = _rs2[_c][0].match(CELL_REF_REGEX);
                           const _pos = cellMatch ? this.lc(cellMatch[2], cellMatch[1]) : [];
-                          const typeMatch = _rs2[_c][0].match(/t="([^"])/);
+                          const typeMatch = _rs2[_c][0].match(CELL_TYPE_REGEX);
                           const _t = typeMatch ? typeMatch[1] : null;
-                          const valueMatch = _rs2[_c][0].match(/<v>([^<]*)<\/v>/);
+                          const valueMatch = _rs2[_c][0].match(CELL_VALUE_REGEX);
                           let _v: string = valueMatch ? valueMatch[1] : '';
                           if (_t === 's' && /^\d+$/.test(_v)) {
                             _v = this.shared[parseInt(_v, 10)];
@@ -123,7 +141,7 @@ export class ExcelDataHandler extends ExcelCore {
       for (const _k of _keys) {
         if (_k !== 'xl/sharedStrings.xml') {
           let _v: string | null = this.schema[_k];
-          if (_v && _v.includes('{placeholder}')) {
+          if (_v && _v.includes(PLACEHOLDER)) {
             _v = this.updateSchema(_k);
           }
           if (_v) {
@@ -133,7 +151,7 @@ export class ExcelDataHandler extends ExcelCore {
       }
       if (_keys.includes('xl/sharedStrings.xml')) {
         let _v: string | null = this.schema['xl/sharedStrings.xml'];
-        if (_v && _v.includes('{placeholder}')) {
+        if (_v && _v.includes(PLACEHOLDER)) {
           _v = this.updateSchema('xl/sharedStrings.xml');
         }
         if (_v) {
@@ -213,7 +231,7 @@ export class ExcelDataHandler extends ExcelCore {
     let _id = 0;
     let _lid = 0;
 
-    if (_ret && _ret.includes('{placeholder}')) {
+    if (_ret && GENERIC_PLACEHOLDER_REGEX.test(_ret)) {
       switch (key) {
         case 'xl/workbook.xml':
           _rids = Object.keys(this.sheets);
@@ -221,7 +239,7 @@ export class ExcelDataHandler extends ExcelCore {
             _id = this.sheets[_rid].id;
             _xml += `<sheet name="${this.sheets[_rid].name}" sheetId="${this.sheets[_rid].id}" r:id="${_rid}"/>`;
           }
-          _ret = _ret.replace('{placeholder}', _xml);
+          _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case 'xl/_rels/workbook.xml.rels':
           _rids = Object.keys(this.sheets);
@@ -244,7 +262,7 @@ export class ExcelDataHandler extends ExcelCore {
             _lid++;
             _xml += `<Relationship Id="rId${_lid}" Target="styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"/>`;
           }
-          _ret = _ret.replace('{placeholder}', _xml);
+          _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case '_rels/.rels':
           if (this.schema['docProps/core.xml']) {
@@ -253,7 +271,7 @@ export class ExcelDataHandler extends ExcelCore {
           if (this.schema['docProps/app.xml']) {
             _xml += `<Relationship Id="rId3" Target="docProps/app.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties"/>`;
           }
-          _ret = _ret.replace('{placeholder}', _xml);
+          _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case '[Content_Types].xml':
           _xml += `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`;
@@ -276,7 +294,7 @@ export class ExcelDataHandler extends ExcelCore {
           if (this.schema['docProps/app.xml']) {
             _xml += `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`;
           }
-          _ret = _ret.replace('{placeholder}', _xml);
+          _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case 'xl/sharedStrings.xml':
           _rids = Object.keys(this.shared);
@@ -284,18 +302,18 @@ export class ExcelDataHandler extends ExcelCore {
             _xml += `<si><t>${this.shared[_rid]}</t></si>`;
           }
           _ret = _ret.replace(
-            '{placeholder}',
+            GENERIC_PLACEHOLDER_REGEX,
             `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${_xml}</sst>`
           );
           break;
         default:
           if (key.includes('xl/worksheets/')) {
-            const match = key.match(/xl\/(worksheets\/[^/]+\.xml)/);
+            const match = key.match(WORKBOOK_SHEET_REGEX);
             if (match) {
               const sheetName = match[1];
               const sheetKey = Object.keys(this.sheets).find((key) => this.sheets[key].target === sheetName);
               if (sheetKey) {
-                _ret = _ret.replace('{placeholder}', this.ws(this.sheets[sheetKey].data));
+                _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, this.ws(this.sheets[sheetKey].data));
               }
             }
           }

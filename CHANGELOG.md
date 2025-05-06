@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.3] - 2025-05-06
+
+### Summary
+This release focuses on performance improvements and optimizations for handling large datasets. Key enhancements include optimizations to shared string handling, batch processing for large data operations.
+
+### Features
+
+- **Support for reading JSON data from files**
+  - The `setData` method now supports reading JSON data directly from files.
+  - Supported file formats:
+    - `.json`: Standard JSON files.
+    - `.json.gz`: Compressed JSON files with GZIP compression.
+  - Examples: reading JSON data from files:
+
+```typescript
+await excelBase.setData('Sheet1', '/path/to/data.json');
+await excelBase.setData('Sheet2', '/path/to/data.json.gz');
+```
+
 ## [1.0.2] - 2025-05-01
 
 ### Summary

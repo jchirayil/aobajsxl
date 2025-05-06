@@ -88,14 +88,22 @@ export class Excel {
   /**
    * Sets the data for a specific sheet.
    * @param sheetName The name of the sheet to set data for.
-   * @param data An array of JSON data to set in the specified sheet.
+   * @param data An array of JSON data to set in the specified sheet, or a string file name of the JSON file containing the data.
    * @summary Sets the JSON data for a specific sheet.
    * @example
    * const excel = new Excel();
-   * excel.setData('TestSheet', [{ name: 'Alice', age: 30 },{ name: 'Bob', age: 25 }]);
+   * excel.setData('TestSheet', [{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }]);
+   * @example
+   * const excel = new Excel();
+   * excel.setData('TestSheet', 'data.json');
    */
-  setData(sheetName: string, data: any[]): void {
-    this.dataHandler.setSheetData(sheetName, data);
+  async setData(sheetName: string, data: any[] | string): Promise<void> {
+    if (typeof data === 'string') {
+      const jsonData = await this.zipHandler.readJSON(data);
+      this.dataHandler.setSheetData(sheetName, jsonData);
+    } else {
+      this.dataHandler.setSheetData(sheetName, data);
+    }
   }
 
   protected async process(zip: JSZip, actionType: string = 'write'): Promise<void> {
