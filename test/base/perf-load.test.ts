@@ -14,10 +14,10 @@ describe('Excel Performance Load Tests', function () {
     });
 
     const testCases = [
-        { rows: 100, cols: 10, file: 'perf-test-100.json' },
-        { rows: 1000, cols: 10, file: 'perf-test-1000.json' },
-        { rows: 10000, cols: 10, file: 'perf-test-10000.json.gz' },
-        { rows: 100000, cols: 10, file: 'perf-test-100000.json.gz' }
+        { rows: 100, cols: 10, file: 'perf-test-100.json', write: true },
+        { rows: 1000, cols: 10, file: 'perf-test-1000.json', write: true },
+        { rows: 10000, cols: 10, file: 'perf-test-10000.json.gz', write: true },
+        { rows: 100000, cols: 10, file: 'perf-test-100000.json.gz', write: false }
     ];
 
     testCases.forEach(({ rows, cols, file }) => {
@@ -28,27 +28,28 @@ describe('Excel Performance Load Tests', function () {
             const startTime = Date.now(); // Capture start time
             await excelBase['setData'](sheetName, sourceFilePath); // Accessing protected method
             const loadTime = Date.now(); // Capture load time
+            console.log(`\tExecution time to read [${rows} (rows) x ${cols} (cols)] from ${file}: ${loadTime - startTime} ms`); // Report execution time
 
-            console.log(`\tExecution time to read ${file} file [${rows} (rows) x ${cols} (cols)]: ${loadTime - startTime} ms`); // Report execution time
+            expect(excelBase.getData(sheetName).length).to.equal(rows); // Check if the data length matches the expected rows
         });
     });
 
-    testCases.forEach(({ rows, cols, file }) => {
-        it(`should write ${rows} (rows) x ${cols} (cols) JSON data`, async () => {
-            const sourceFilePath = path.join(__dirname, `../data/${file}`); // Construct the source file path
-            const sheetName = `PerSheet${rows}x${cols}`;
-
-            const startTime = Date.now(); // Capture start time
-            await excelBase['setData'](sheetName, sourceFilePath); // Accessing protected method
-            const loadTime = Date.now(); // Capture load time
-            const targetFilePath = path.join(__dirname, `../data/perf-test-${rows}-copy.xlsx`); // Construct the target file path
-            //await excelBase.write(targetFilePath);
-            const endTime = Date.now(); // Capture end time
-
-            console.log(`\tExecution time [${rows} (rows) x ${cols} (cols)]: ${loadTime - startTime} ms Write: ${endTime - loadTime} ms Total: ${endTime - startTime} ms`); // Report execution time
-
-            //expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
-            //fs.unlinkSync(targetFilePath); // Clean up the test file
-        });
+    testCases.forEach(({ rows, cols, file, write }) => {
+        if(write){
+            it(`should write ${rows} (rows) x ${cols} (cols) JSON data`, async () => {
+                const sourceFilePath = path.join(__dirname, `../data/${file}`); // Construct the source file path
+                const sheetName = `PerSheet${rows}x${cols}`;
+    
+                await excelBase['setData'](sheetName, sourceFilePath); // Accessing protected method
+                const loadTime = Date.now(); // Capture load time
+                const targetFilePath = path.join(__dirname, `../data/perf-test-${rows}-copy.xlsx`); // Construct the target file path
+                await excelBase.write(targetFilePath);
+                const endTime = Date.now(); // Capture end time
+                console.log(`\tExecution time to write [${rows} (rows) x ${cols} (cols)] to ${targetFilePath}: ${endTime - loadTime} ms`); // Report execution time
+    
+                expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
+                //fs.unlinkSync(targetFilePath); // Clean up the test file
+            });
+        }
     });
 });
