@@ -48,7 +48,7 @@ describe('Excel Performance Load Tests', function () {
                 console.log(`\tExecution time to write [${rows} (rows) x ${cols} (cols)] to ${targetFilePath}: ${endTime - loadTime} ms`); // Report execution time
     
                 expect(fs.existsSync(targetFilePath)).to.be.true; // Check if the file exists
-                //fs.unlinkSync(targetFilePath); // Clean up the test file
+                fs.unlinkSync(targetFilePath); // Clean up the test file
             });
         }
     });
