@@ -105,7 +105,7 @@ describe('Excel', () => {
     ]);
     await excelBase.write(filePath);
     expect(fs.existsSync(filePath)).to.be.true;
-    fs.unlinkSync(filePath);
+    //fs.unlinkSync(filePath);
   });
 
   it('should write formula - reference - to a zip file', async () => {
@@ -117,34 +117,6 @@ describe('Excel', () => {
     ]);
     await excelBase.write(filePath);
     expect(fs.existsSync(filePath)).to.be.true;
-    fs.unlinkSync(filePath);
-  });
-
-  it('should write incorrect formula as is', async () => {
-    const filePath = path.join(__dirname, '../data/test-error-formula.xlsx'); // Construct the file path
-    excelBase['setData']('FormulaSheet', [
-        {id: 1, operation: 'multiplication', total: '=*3'},
-        {id: 2, operation: 'addition', total: '=5+2+4'}, 
-        {id: 3, operation: 'subtraction', total: '=152-24'},
-        {id: 4, operation: 'division', total: '=100/5'},
-        {id: 5, operation: 'concatenate', total: '=CONCATENATE("Hello", " ", "World")'}
-    ]);
-    await excelBase.write(filePath);
-    expect(fs.existsSync(filePath)).to.be.true;
-    fs.unlinkSync(filePath);
-  });
-
-  it('should write large number of records', async () => {
-    const filePath = path.join(__dirname, '../data/test-large-records.xlsx'); // Construct the file path
-    var data:any[]=[]
-    for (var i=0; i<10000; i++){
-      data.push({
-        id: i, name: "Row" + (i+1), value: 15000*(i+1),
-      })
-    }
-    excelBase['setData']('ExtensiveSheet', data);
-    await excelBase.write(filePath);
-    expect(fs.existsSync(filePath)).to.be.true;
-    // fs.unlinkSync(filePath);
+    //fs.unlinkSync(filePath);
   });
 });

@@ -244,7 +244,9 @@ export class ExcelCore {
     } else if (val != null && !isNaN(val)) {
       _type = 'number';
     } else if (typeof val === 'string' && val.startsWith('=')) {
-      _type = 'formula';
+      if (val.length > 1 && /^[a-zA-Z0-9+\-\[\(]/.test(val[1])) {
+        _type = 'formula';
+      }
     }
     return _type;
   }
