@@ -1,4 +1,4 @@
-[**aobajsxl v1.0.0**](README.md)
+[**aobajsxl v1.0.3**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Class: Excel
 
-Defined in: [index.ts:19](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L19)
+Defined in: [index.ts:19](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L19)
 
 Excel class to handle reading and writing Excel files.
 
@@ -28,7 +28,7 @@ console.log(sheetNames);
 
 > **new Excel**(): `Excel`
 
-Defined in: [index.ts:23](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L23)
+Defined in: [index.ts:23](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L23)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [index.ts:23](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd
 
 > **getData**(`sheetName`): `any`[]
 
-Defined in: [index.ts:84](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L84)
+Defined in: [index.ts:84](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L84)
 
 Gets the data from a specific sheet.
 
@@ -73,7 +73,7 @@ console.log(data);
 
 > **getSheetNames**(): `string`[]
 
-Defined in: [index.ts:69](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L69)
+Defined in: [index.ts:69](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L69)
 
 Gets the names of all sheets in the Excel file.
 
@@ -98,7 +98,7 @@ console.log(sheetNames);
 
 > **read**(`fileName`): `Promise`\<`void`\>
 
-Defined in: [index.ts:39](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L39)
+Defined in: [index.ts:39](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L39)
 
 Reads an Excel file and parses its data.
 
@@ -129,9 +129,9 @@ console.log(data);
 
 ### setData()
 
-> **setData**(`sheetName`, `data`): `void`
+> **setData**(`sheetName`, `data`): `Promise`\<`void`\>
 
-Defined in: [index.ts:97](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L97)
+Defined in: [index.ts:100](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L100)
 
 Sets the data for a specific sheet.
 
@@ -145,19 +145,29 @@ The name of the sheet to set data for.
 
 ##### data
 
-`any`[]
+An array of JSON data to set in the specified sheet, or a string file name of the JSON file containing the data.
 
-An array of JSON data to set in the specified sheet.
+`string` | `any`[]
 
 #### Returns
 
-`void`
+`Promise`\<`void`\>
 
-#### Example
+#### Examples
 
 ```ts
 const excel = new Excel();
-excel.setData('TestSheet', [{ name: 'Alice', age: 30 },{ name: 'Bob', age: 25 }]);
+excel.setData('TestSheet', [{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }]);
+```
+
+```ts
+const excel = new Excel();
+excel.setData('TestSheet', 'data.json'); //JSON file
+```
+
+```ts
+const excel = new Excel();
+excel.setData('TestSheet', 'data.json.gz'); //compressed JSON file
 ```
 
 ***
@@ -166,7 +176,7 @@ excel.setData('TestSheet', [{ name: 'Alice', age: 30 },{ name: 'Bob', age: 25 }]
 
 > **write**(`filename`): `Promise`\<`void`\>
 
-Defined in: [index.ts:54](https://github.com/jchirayil/aobajsxl/blob/3b0f17941fd9e229adc6897ac47ec47bc88f8d23/src/index.ts#L54)
+Defined in: [index.ts:54](https://github.com/jchirayil/aobajsxl/blob/ac34217a37d8720012c91efc00dc8f69191c879e/src/index.ts#L54)
 
 Writes the data to an Excel file.
 
