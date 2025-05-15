@@ -54,10 +54,7 @@ The testing will cover the following core functionalities of the library:
 
 The testing will **not** explicitly cover:
 
-* Advanced XLSX formatting (styles, fonts, colors, complex layouts) unless specifically mentioned in the library's features.
-* Complex XLSX features like formulas, charts, or macros, unless the library explicitly supports them.
 * Specific performance benchmarks beyond general assessment for large datasets.
-* Security testing.
 * Accessibility testing.
 
 ## 4. Test Approach
