@@ -1,58 +1,75 @@
 # Test Cases: JSON/XLSX Processing Library
 
 **Version:** 1.0
-**Date:** May 11, 2025
+**Date:** May 15, 2025
 
 This document details the individual test cases for the JSON/XLSX processing library, as outlined in the Test Plan.
 
-## 1. JSON Parsing Test Cases
+## 1. Functional Test Cases
 
-| Test Case ID      | Test Title                                                | Preconditions                                    | Steps to Execute                                                                 | Expected Results                                                                    | Priority |
-|-------------------|-----------------------------------------------------------|--------------------------------------------------|----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|----------|
-| TC_JSON_PARSE_001 | Parse basic JSON object (string, number, boolean)       | Valid JSON file with basic data exists.          | 1. Call the JSON parsing function with the valid JSON file.                       | The function should return a JavaScript object with the correct key-value pairs. | High     |
-| TC_JSON_PARSE_002 | Parse deeply nested JSON object                         | Valid JSON file with nested objects/arrays exists. | 1. Call the JSON parsing function with the nested JSON file.                      | The function should return a JavaScript object representing the entire structure.  | Medium   |
-| TC_JSON_PARSE_003 | Attempt to parse JSON with missing closing brace         | Invalid JSON file with a missing '}' exists.     | 1. Call the JSON parsing function with the invalid JSON file.                     | The function should throw an error or return an error object with a clear message. | High     |
-| TC_JSON_PARSE_004 | Parse JSON with null values                             | Valid JSON file containing null values exists.   | 1. Call the JSON parsing function with the JSON file.                           | The function should return a JavaScript object where null values are preserved.   | Medium   |
-| TC_JSON_PARSE_005 | Parse JSON with empty object and array                   | Valid JSON file containing {} and [] exists.      | 1. Call the JSON parsing function with the JSON file.                           | The function should return a JavaScript object with empty objects and arrays.     | Low      |
-| TC_JSON_PARSE_006 | Parse JSON with special characters (e.g., Unicode)      | Valid JSON file with special characters exists.   | 1. Call the JSON parsing function with the JSON file.                           | The function should correctly parse and represent the special characters.         | Medium   |
-| TC_JSON_PARSE_007 | Parse a large JSON file (> 1MB)                         | Valid JSON file exceeding 1MB exists.            | 1. Call the JSON parsing function with the large JSON file.                      | The function should parse the file without crashing or excessive memory usage.    | Medium   |
+1.	Test that the correct data is retrieved on reading the Excel file
+2.	Test when-\
+  a.	File contains-
 
-## 2. JSON Generation Test Cases
+      i.	Characters - alphabetic, numeric, alphanumeric, symbols, foreign characters, custom characters (EUDC)\
+      ii.	(Pivot) Tables, Forms\
+      iii.	Illustrations, Controls, Charts, Sparklines, Filters, Links and Comments\
+      iv.	Background\
+      v.	Page breaks\
+      vi.	Formulas\
+      vii.	Defined names\
+      viii.	Macros
 
-| Test Case ID      | Test Title                                          | Preconditions                                  | Steps to Execute                                                              | Expected Results                                                                | Priority |
-|-------------------|-----------------------------------------------------|------------------------------------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------|----------|
-| TC_JSON_GEN_001   | Generate basic JSON object from JS object          | A simple JavaScript object exists.             | 1. Call the JSON generation function with the JavaScript object.              | The function should return a valid JSON string representing the object.        | High     |
-| TC_JSON_GEN_002   | Generate nested JSON structure                     | A nested JavaScript object exists.             | 1. Call the JSON generation function with the nested JavaScript object.         | The function should return a valid JSON string with the correct nesting.        | Medium   |
-| TC_JSON_GEN_003   | Generate JSON with different data types (null, bool) | A JS object with null, boolean, number, string exists. | 1. Call the JSON generation function with the JavaScript object.              | The function should correctly serialize all data types in the JSON string.      | High     |
-| TC_JSON_GEN_004   | Generate a large JSON string (e.g., array of 1000 items) | A large JavaScript array exists.               | 1. Call the JSON generation function with the large JavaScript array.          | The function should generate a valid and large JSON string.                    | Medium   |
+    b.	Different page layout (margins, orientation, page size, etc.) is set
+  	
+    c.	Rows/Columns are-
 
-## 3. XLSX Parsing Test Cases
+      i.	Merged\
+      ii.	Hidden\
+      iii.	Frozen\
+      iv.	Resized (to very small or large scale)
 
-| Test Case ID      | Test Title                                            | Preconditions                                    | Steps to Execute                                                                    | Expected Results                                                                          | Priority |
-|-------------------|-------------------------------------------------------|--------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|----------|
-| TC_XLSX_PARSE_001 | Parse XLSX with single sheet (various data types)    | Valid XLSX file with one sheet exists.           | 1. Call the XLSX parsing function with the valid XLSX file.                        | The function should return a data structure (e.g., array of objects) representing the sheet data with correct data types. | High     |
-| TC_XLSX_PARSE_002 | Parse XLSX with multiple sheets                       | Valid XLSX file with multiple sheets exists.      | 1. Call the XLSX parsing function with the multi-sheet XLSX file.                 | The function should return a data structure containing data from all sheets, possibly keyed by sheet name. | High     |
-| TC_XLSX_PARSE_003 | Attempt to parse a corrupted XLSX file                | Invalid/corrupted XLSX file exists.            | 1. Call the XLSX parsing function with the invalid XLSX file.                      | The function should throw an error or return an error object with a clear message.        | High     |
-| TC_XLSX_PARSE_004 | Parse XLSX with empty cells                           | Valid XLSX file containing empty cells exists.   | 1. Call the XLSX parsing function with the XLSX file.                            | The function should represent empty cells appropriately (e.g., as null or empty strings). | Medium   |
-| TC_XLSX_PARSE_005 | Parse a large XLSX file (e.g., 1000+ rows)            | Valid XLSX file with a large number of rows exists. | 1. Call the XLSX parsing function with the large XLSX file.                       | The function should parse the file without crashing or excessive memory usage.           | Medium   |
+    d.	Sheet is bound to different data sources\
+    e.	Cell is bound to – Stocks, Geography, Currencies data types\
+    f.	Sorting is applied\
+    g.	Filtering is applied\
+    h.	Validation is applied\
+    i.	Grouping (with subtotal) is applied\
+    j.	Different styles/formatting are applied\
 
-## 4. XLSX Generation Test Cases
+3.	Test that specified data is written in the Excel file correctly
+4.	Test when-\
+  a.	Different JSON data is used
 
-| Test Case ID      | Test Title                                          | Preconditions                                  | Steps to Execute                                                              | Expected Results                                                                | Priority |
-|-------------------|-----------------------------------------------------|------------------------------------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------|----------|
-| TC_XLSX_GEN_001   | Generate basic XLSX with single sheet              | A simple JavaScript data structure exists.     | 1. Call the XLSX generation function with the data.                              | The function should generate a valid XLSX file with the data in a single sheet. | High     |
-| TC_XLSX_GEN_002   | Generate XLSX with multiple sheets                  | A JavaScript data structure for multiple sheets exists. | 1. Call the XLSX generation function with the multi-sheet data.                | The function should generate a valid XLSX file with the data in multiple sheets. | High     |
-| TC_XLSX_GEN_003   | Generate XLSX with different data types (number, bool, date) | A JS data structure with various data types exists. | 1. Call the XLSX generation function with the data.                              | The function should correctly write different data types to the XLSX file.      | High     |
-| TC_XLSX_GEN_004   | Generate XLSX with column headers (if supported)    | A JS data structure with header information exists. | 1. Call the XLSX generation function with the data including headers.          | The function should generate a valid XLSX file with the specified column headers. | Medium   |
-| TC_XLSX_GEN_005   | Generate a large XLSX file (e.g., 1000+ rows)       | A large JavaScript data structure exists.      | 1. Call the XLSX generation function with the large data.                     | The function should generate a valid and large XLSX file.                    | Medium   |
+      i.	Plain\
+      ii.	Nested\
+      iii.	Arrays\
+      iv.	Empty/null\
+      v.	Duplicate\
+      vi.	Lengthy/High precision
+  	
+    b.	JSON format is incorrect\
+    c.	Different datatypes are used
 
-## 5. Error Handling Test Cases
+      i.	Test that datatypes are preserved in exported Excel 
 
-| Test Case ID      | Test Title                                         | Preconditions                                    | Steps to Execute                                                              | Expected Results                                                                    | Priority |
-|-------------------|----------------------------------------------------|--------------------------------------------------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|----------|
-| TC_ERR_PARSE_JSON_001 | Parse completely empty JSON file                 | An empty `.json` file exists.                   | 1. Call the JSON parsing function with the empty file.                        | The function should throw an error or return an error object.                      | High     |
-| TC_ERR_PARSE_XLSX_001 | Parse a file with the wrong extension (.txt instead of .xlsx) | A `.txt` file exists.                              | 1. Call the XLSX parsing function with the `.txt` file.                        | The function should throw an error or return an error object indicating invalid format. | High     |
-| TC_ERR_GEN_JSON_001   | Attempt to generate JSON from a circular object    | A JavaScript object with a circular reference exists. | 1. Call the JSON generation function with the circular object.               | The function should handle the circular reference gracefully (e.g., throw an error or prevent infinite loop). | Medium   |
-| TC_ERR_GEN_XLSX_001   | Attempt to generate XLSX with unsupported data type | A JavaScript data structure with an unsupported type exists. | 1. Call the XLSX generation function with the data.                              | The function should handle the unsupported type gracefully (e.g., throw an error or provide a default representation). | Medium   |
+5.	Test that warning message appears for entities which are not read/written\
+6.	Test that no/handled errors occur when data is read/written from/to \
+    a.	new/existing sheets\
+    b.	invalid/corrupted Excel files\
+    c.	not accessible files
+  	
+7.	Test that appropriate message appears on reading/writing to password protected/unauthorized files
+8.	Test that data is read/written from/to Excel files sync/async operations
+
+## 2. Non-Functional Test Cases
+
+1.	Test that large data is read/written from/to Excel files\
+  a.	Test that time and memory consumption is acceptable in this case.
+2.	Test that data can be read/written many times through sync/async operations
+3.	Test that generated files can be opened in different Excel versions/apps
+4.	Test that logs are maintained for operations done with detailed errors if any.
+5.	Test that no/handled errors occur on performing above operations
+
 
 **Note:** This is an initial set of test cases. More detailed test cases will be added as development progresses and more specific functionalities are implemented. The "Priority" indicates the importance of the test case (High = critical, Medium = important, Low = less critical).
