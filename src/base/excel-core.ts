@@ -1,7 +1,7 @@
 // src/base/excel-core.ts
 
 interface Schema {
-  [key: string]: string | null;
+  [key: string]: string;
 }
 
 interface SharedStrings {
@@ -26,13 +26,35 @@ interface Sheets {
 const MAX_SHARED_STRING_LENGTH = 32767;
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-export class ExcelCore {
+export abstract class ExcelCore {
+  protected static readonly XML_TAGS: Schema = {
+    WORKBOOK: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><workbookPr/><sheets>{placeholder}</sheets><definedNames/><calcPr/></workbook>`,
+    WORKBOOK_RELS: `<?xml version="1.0" ?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{placeholder}</Relationships>`,
+    WORKBOOK_RELS_SHARED_STRINGS: `<Relationship Id="rId{placeholder}" Target="sharedStrings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"/>`,
+    WORKBOOK_RELS_THEME: `<Relationship Id="rId{placeholder}" Target="theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"/>`,
+    WORKBOOK_RELS_STYLES: `<Relationship Id="rId{placeholder}" Target="styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"/>`,
+    RELS: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>{placeholder}</Relationships>`,
+    RELS_CORE: `<Relationship Id="rId2" Target="docProps/core.xml" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"/>`,
+    RELS_APP: `<Relationship Id="rId3" Target="docProps/app.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties"/>`,
+    CONTENT_TYPES: `<?xml version="1.0" ?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default ContentType="application/xml" Extension="xml"/><Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>{placeholder}</Types>`,
+    CONTENT_TYPE_PART_WORKBOOK: `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`,
+    CONTENT_TYPE_PART_WORKSHEET: `<Override PartName="/xl/{placeholder}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`,
+    CONTENT_TYPE_PART_SHARED_STRINGS: `<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>`,
+    CONTENT_TYPE_PART_THEME: `<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>`,
+    CONTENT_TYPE_PART_STYLES: `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`,
+    CONTENT_TYPE_PART_CORE: `<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`,
+    CONTENT_TYPE_PART_APP: `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`,
+    SHARED_STRINGS: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>{placeholder}`,
+    SHARED_STRING_LIST: `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">{placeholder}</sst>`,
+    WORKSHEET: `<?xml version="1.0" ?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><sheetData>{placeholder}</sheetData></worksheet>`,
+  };
+
   protected schema: Schema = {
-    'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><workbookPr/><sheets>{placeholder}</sheets><definedNames/><calcPr/></workbook>`,
-    'xl/_rels/workbook.xml.rels': `<?xml version="1.0" ?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{placeholder}</Relationships>`,
-    '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>{placeholder}</Relationships>`,
-    '[Content_Types].xml': `<?xml version="1.0" ?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default ContentType="application/xml" Extension="xml"/><Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>{placeholder}</Types>`,
-    'xl/sharedStrings.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>{placeholder}`,
+    'xl/workbook.xml': ExcelCore.XML_TAGS.WORKBOOK,
+    'xl/_rels/workbook.xml.rels': ExcelCore.XML_TAGS.WORKBOOK_RELS,
+    '_rels/.rels': ExcelCore.XML_TAGS.RELS,
+    '[Content_Types].xml': ExcelCore.XML_TAGS.CONTENT_TYPES,
+    'xl/sharedStrings.xml': ExcelCore.XML_TAGS.SHARED_STRINGS,
   };
   protected shared: SharedStrings = {};
   protected sharedRev: SharedStringsRev = {};

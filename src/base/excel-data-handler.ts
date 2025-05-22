@@ -33,6 +33,7 @@ export class ExcelDataHandler extends ExcelCore {
    * @param zip The JSZip object representing the Excel file.
    */
   async parseData(zip: JSZip): Promise<void> {
+    console.log('Reading file');
     //let _rg0: RegExp | null = null;
     //let _rg1: RegExp | null = null;
     let _rs0: RegExpMatchArray[] = [];
@@ -64,6 +65,7 @@ export class ExcelDataHandler extends ExcelCore {
           Object.keys(this.schema).map(async (file) => {
             const fileContent = await zip.file(file)?.async('string');
             if (fileContent) {
+              console.log('file:', file, '\ndata:', fileContent);
               switch (file) {
                 case 'xl/workbook.xml':
                   this.schema[file] = fileContent.replace(SHEET_REGEX, `<sheets>${PLACEHOLDER}</sheets>`);
@@ -135,9 +137,11 @@ export class ExcelDataHandler extends ExcelCore {
   }
 
   async buildData(): Promise<JSZip> {
+    console.log('\n\nWRITING EXCEL FILE');
     const zip = new JSZip();
     await (async () => {
       const _keys = Object.keys(this.schema);
+      console.log('schema keys:', _keys);
       for (const _k of _keys) {
         if (_k !== 'xl/sharedStrings.xml') {
           let _v: string | null = this.schema[_k];
@@ -145,6 +149,7 @@ export class ExcelDataHandler extends ExcelCore {
             _v = this.updateSchema(_k);
           }
           if (_v) {
+            console.log('file:', _k, '\ndata:', _v);
             zip.file(_k, _v);
           }
         }
@@ -155,6 +160,7 @@ export class ExcelDataHandler extends ExcelCore {
           _v = this.updateSchema('xl/sharedStrings.xml');
         }
         if (_v) {
+          console.log('file:', 'xl/sharedStrings.xml', '\ndata:', _v);
           zip.file('xl/sharedStrings.xml', _v);
         }
       }
@@ -188,8 +194,7 @@ export class ExcelDataHandler extends ExcelCore {
       _target = target.length > 0 ? target : `worksheets/sheet${_sheetId}.xml`;
     }
     this.sheets[_rId] = { name: sheetName, id: _sheetId, target: _target, data: data };
-    this.schema[`xl/${_target}`] =
-      `<?xml version="1.0" ?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="urn:schemas-microsoft-com:mac:vml" xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><sheetData>{placeholder}</sheetData></worksheet>`;
+    this.schema[`xl/${_target}`] = ExcelCore.XML_TAGS.WORKSHET;
   }
 
   protected updateSheetTarget(relationId: string, target: string): void {
@@ -252,47 +257,50 @@ export class ExcelDataHandler extends ExcelCore {
           }
           if (this.schema['xl/sharedStrings.xml']) {
             _lid++;
-            _xml += `<Relationship Id="rId${_lid}" Target="sharedStrings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"/>`;
+            _xml += ExcelCore.XML_TAGS.WORKBOOK_RELS_SHARED_STRINGS.replace(GENERIC_PLACEHOLDER_REGEX, _lid.toString());
           }
           if (this.schema['xl/theme/theme1.xml']) {
             _lid++;
-            _xml += `<Relationship Id="rId${_lid}" Target="theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"/>`;
+            _xml += ExcelCore.XML_TAGS.WORKBOOK_RELS_THEME.replace(GENERIC_PLACEHOLDER_REGEX, _lid.toString());
           }
           if (this.schema['xl/styles.xml']) {
             _lid++;
-            _xml += `<Relationship Id="rId${_lid}" Target="styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"/>`;
+            _xml += ExcelCore.XML_TAGS.WORKBOOK_RELS_STYLES.replace(GENERIC_PLACEHOLDER_REGEX, _lid.toString());
           }
           _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case '_rels/.rels':
           if (this.schema['docProps/core.xml']) {
-            _xml += `<Relationship Id="rId2" Target="docProps/core.xml" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"/>`;
+            _xml += ExcelCore.XML_TAGS.RELS_CORE;
           }
           if (this.schema['docProps/app.xml']) {
-            _xml += `<Relationship Id="rId3" Target="docProps/app.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties"/>`;
+            _xml += ExcelCore.XML_TAGS.RELS_APP;
           }
           _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
         case '[Content_Types].xml':
-          _xml += `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`;
+          _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_WORKBOOK;
           _rids = Object.keys(this.sheets);
           for (const _rid of _rids) {
-            _xml += `<Override PartName="/xl/${this.sheets[_rid].target}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_WORKSHEET?.replace(
+              GENERIC_PLACEHOLDER_REGEX,
+              this.sheets[_rid].target
+            );
           }
           if (this.schema['xl/sharedStrings.xml']) {
-            _xml += `<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_SHARED_STRINGS;
           }
           if (this.schema['xl/theme/theme1.xml']) {
-            _xml += `<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_THEME;
           }
           if (this.schema['xl/styles.xml']) {
-            _xml += `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_STYLES;
           }
           if (this.schema['docProps/core.xml']) {
-            _xml += `<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_CORE;
           }
           if (this.schema['docProps/app.xml']) {
-            _xml += `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`;
+            _xml += ExcelCore.XML_TAGS.CONTENT_TYPE_PART_APP;
           }
           _ret = _ret.replace(GENERIC_PLACEHOLDER_REGEX, _xml);
           break;
@@ -303,7 +311,7 @@ export class ExcelDataHandler extends ExcelCore {
           }
           _ret = _ret.replace(
             GENERIC_PLACEHOLDER_REGEX,
-            `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${_xml}</sst>`
+            ExcelCore.XML_TAGS.SHARED_STRING_LIST?.replace(GENERIC_PLACEHOLDER_REGEX, _xml)
           );
           break;
         default:
@@ -320,6 +328,7 @@ export class ExcelDataHandler extends ExcelCore {
           break;
       }
     }
+    //console.log('file:', key, '\ndata:', _ret);
     return _ret || '';
   }
 }
