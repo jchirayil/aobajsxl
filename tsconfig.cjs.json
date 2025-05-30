@@ -1,0 +1,15 @@
+// tsconfig.cjs.json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",             // Output CommonJS modules
+    "outDir": "./dist/cjs",           // Output CommonJS to dist/cjs
+    "declaration": false,             // Do NOT generate declarations again (they come from the ESM build)
+    "declarationMap": false           // Do NOT generate declaration maps again
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.base.json", // Inherit base settings
+  "compilerOptions": {
+    "module": "NodeNext", // Or "ESNext"
+    "target": "ES2022",
+    "noEmit": true, // Vitest compiles in memory
+    "types": ["vitest/globals", "vitest/importing", "node", "chai"], // Add Vitest types
+    // If you use "paths" for absolute imports, ensure they are here
+    // "baseUrl": "./",
+    // "paths": { "@src/*": ["./src/*"] }
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

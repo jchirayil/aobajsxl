@@ -1,0 +1,20 @@
+// tsconfig.base.json
+{
+  "compilerOptions": {
+    "target": "ES2022",                // Modern JS features, async/await, etc.
+    "moduleResolution": "NodeNext",    // Matches module system for resolution
+    "declaration": true,               // Generate .d.ts files (will be moved by specific configs)
+    "declarationMap": true,            // Generate sourcemaps for declaration files
+    "outDir": "./dist",                // Base output directory (overridden by specific configs)
+    "rootDir": "./src",                // Source root
+    "strict": true,                    // Enable all strict type-checking
+    "esModuleInterop": true,           // Allow default imports from CJS modules
+    "skipLibCheck": true,              // Faster builds, skip type checking node_modules
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,         // Allow importing JSON files
+    "allowSyntheticDefaultImports": true, // For Mocha/Chai compatibility
+    "sourceMap": true                  // Helpful for debugging/tests
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"] // Keep 'test' here to exclude them from the primary build output
+}

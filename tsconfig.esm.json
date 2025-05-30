@@ -1,0 +1,10 @@
+// tsconfig.esm.json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",             // Output ES Modules (or "esnext" for broadest bundler compatibility)
+    "outDir": "./dist/esm",           // Output ES Modules to dist/esm
+    "declarationDir": "./dist/types", // Put declaration files here, generated once
+    "declaration": true               // Ensure declarations are generated for ESM build
+  }
+}
